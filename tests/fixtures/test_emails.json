@@ -1,0 +1,42 @@
+[
+    {
+        "id": "test_email_1",
+        "sender": "urgent@example.com",
+        "subject": "URGENT: Meeting Tomorrow",
+        "body": "Important meeting scheduled for tomorrow at 2 PM. Please prepare your presentation.",
+        "received_date": "2025-09-16T10:00:00Z",
+        "priority": "high"
+    },
+    {
+        "id": "test_email_2",
+        "sender": "newsletter@example.com",
+        "subject": "Weekly Newsletter",
+        "body": "Here's your weekly newsletter with updates and news from our community.",
+        "received_date": "2025-09-16T11:00:00Z",
+        "priority": "low"
+    },
+    {
+        "id": "test_email_3",
+        "sender": "colleague@example.com",
+        "subject": "Project Update",
+        "body": "Here's the latest update on our project progress and next steps.",
+        "received_date": "2025-09-16T12:00:00Z",
+        "priority": "medium"
+    },
+    {
+        "id": "test_email_4",
+        "sender": "hr@example.com",
+        "subject": "Your Payslip is Ready",
+        "body": "Your monthly payslip for September is now available in the portal.",
+        "received_date": "2025-09-16T13:00:00Z",
+        "priority": "medium"
+    },
+    {
+        "id": "test_email_5",
+        "sender": "security@example.com",
+        "subject": "Security Alert: Unusual Login Activity",
+        "body": "We detected unusual login activity on your account. Please review immediately.",
+        "received_date": "2025-09-16T14:00:00Z",
+        "priority": "high"
+    }
+]

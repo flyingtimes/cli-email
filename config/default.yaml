@@ -1,0 +1,45 @@
+# Default configuration for Email Priority Manager
+
+email:
+  server: smtp.gmail.com
+  port: 587
+  username: ""
+  password: ""
+  use_ssl: true
+  timeout: 30
+
+database:
+  path: ~/.email_priority_manager/database.db
+  backup_enabled: true
+  backup_interval: 86400  # 24 hours
+  backup_path: ~/.email_priority_manager/backups/
+
+ai:
+  api_key: ""
+  model: "text-davinci-003"
+  max_tokens: 1000
+  temperature: 0.7
+  timeout: 30
+
+app:
+  debug: false
+  log_level: "INFO"
+  log_file: ~/.email_priority_manager/logs/app.log
+  max_log_size: "10MB"
+  backup_count: 5
+
+processing:
+  batch_size: 50
+  max_retries: 3
+  retry_delay: 5
+  concurrent_processing: false
+
+notifications:
+  enabled: true
+  email_notifications: false
+  desktop_notifications: true
+
+storage:
+  attachment_path: ~/.email_priority_manager/attachments/
+  max_attachment_size: "25MB"
+  cleanup_days: 30
