@@ -1,0 +1,3 @@
+[console_scripts]
+email-priority-manager = email_priority_manager.cli.main:main
+epm = email_priority_manager.cli.main:main
