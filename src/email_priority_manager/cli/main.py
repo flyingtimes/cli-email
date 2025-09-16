@@ -1,194 +1,199 @@
 """
-Main CLI entry point for Email Priority Manager.
+Main CLI Entry Point
 
-Provides command-line interface for email processing and configuration management.
+This module provides the main entry point for the Email Priority Manager CLI application.
+It uses Click as the CLI framework and provides a robust command structure with
+comprehensive help system and extensible architecture.
 """
 
-import click
 import sys
+import os
 from pathlib import Path
+from typing import Optional
 
-from ..config.settings import Settings
-from ..utils.logger import setup_logger
-from ..core.processor import EmailProcessor
-from ..database.models import DatabaseManager
+import click
+from rich.console import Console
+from rich.table import Table
+from rich.panel import Panel
+from rich.text import Text
+
+from .framework.setup import setup_cli_framework
+from .utils.colors import Colors
+from .utils.logging import setup_cli_logging
+from .utils.prompts import confirm_action
+from .commands.help import register_help_command, setup_command_help
 
 
-@click.group()
-@click.option('--config', '-c', type=click.Path(exists=True),
-              help='Path to configuration file')
-@click.option('--verbose', '-v', is_flag=True,
-              help='Enable verbose logging')
-@click.option('--debug', is_flag=True,
-              help='Enable debug mode')
+# Initialize rich console for enhanced output
+console = Console()
+
+
+# Main CLI group
+@click.group(
+    name="email-priority-manager",
+    help="Email Priority Manager - Intelligent email classification and organization tool",
+    context_settings={"help_option_names": ["-h", "--help"]}
+)
+@click.version_option(
+    version="0.1.0",
+    prog_name="Email Priority Manager",
+    message="%(prog)s version %(version)s"
+)
+@click.option(
+    "--verbose", "-v",
+    is_flag=True,
+    help="Enable verbose output"
+)
+@click.option(
+    "--quiet", "-q",
+    is_flag=True,
+    help="Suppress all output except errors"
+)
+@click.option(
+    "--config-file",
+    type=click.Path(exists=True, dir_okay=False, readable=True),
+    help="Path to configuration file"
+)
+@click.option(
+    "--log-level",
+    type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR"], case_sensitive=False),
+    default="INFO",
+    help="Set logging level"
+)
 @click.pass_context
-def main(ctx, config, verbose, debug):
-    """Email Priority Manager - AI-powered email prioritization system."""
+def cli(ctx, verbose, quiet, config_file, log_level):
+    """
+    Email Priority Manager - Intelligent email classification and organization tool
+
+    This CLI provides comprehensive tools for managing your emails with AI-powered
+    classification, priority assessment, and organization capabilities.
+    """
+    # Set up context for command execution
     ctx.ensure_object(dict)
 
+    # Store CLI options in context
+    ctx.obj["verbose"] = verbose
+    ctx.obj["quiet"] = quiet
+    ctx.obj["config_file"] = config_file
+    ctx.obj["log_level"] = log_level
+
     # Set up logging
-    log_level = 'DEBUG' if debug else ('INFO' if verbose else 'WARNING')
-    setup_logger(level=log_level)
+    if quiet:
+        ctx.obj["log_level"] = "ERROR"
+    elif verbose:
+        ctx.obj["log_level"] = "DEBUG"
 
-    # Load configuration
+    # Initialize CLI framework
+    setup_cli_framework(ctx.obj)
+
+    # Set up logging
+    setup_cli_logging(ctx.obj["log_level"])
+
+    # Display welcome message if no command provided
+    if len(sys.argv) == 1:
+        display_welcome_message()
+
+
+def display_welcome_message():
+    """Display welcome message and basic usage information."""
+    welcome_text = Text()
+    welcome_text.append("Welcome to ", style="bold blue")
+    welcome_text.append("Email Priority Manager", style="bold green")
+    welcome_text.append("!", style="bold blue")
+
+    panel = Panel(
+        welcome_text,
+        title="Email Priority Manager v0.1.0",
+        border_style="blue",
+        padding=(1, 2)
+    )
+
+    console.print(panel)
+    console.print()
+
+    # Display quick start information
+    table = Table(show_header=True, header_style="bold magenta")
+    table.add_column("Command", style="cyan", width=15)
+    table.add_column("Description", style="white")
+
+    table.add_row("init", "Initialize email database and configuration")
+    table.add_row("scan", "Scan mailbox for emails")
+    table.add_row("classify", "Process and classify emails")
+    table.add_row("list", "Display emails with filters")
+    table.add_row("tag", "Manage email tags")
+    table.add_row("config", "Manage configuration")
+    table.add_row("export", "Export email data")
+    table.add_row("stats", "Show statistics and reports")
+
+    console.print(table)
+    console.print()
+    console.print(f"{Colors.YELLOW}Use --help for detailed usage information{Colors.RESET}")
+
+
+# Command groups for better organization
+@cli.group(
+    name="setup",
+    help="Setup and configuration commands"
+)
+def setup_group():
+    """Setup and configuration commands."""
+    pass
+
+
+@cli.group(
+    name="email",
+    help="Email processing and management commands"
+)
+def email_group():
+    """Email processing and management commands."""
+    pass
+
+
+@cli.group(
+    name="query",
+    help="Query and display commands"
+)
+def query_group():
+    """Query and display commands."""
+    pass
+
+
+@cli.group(
+    name="data",
+    help="Data management and export commands"
+)
+def data_group():
+    """Data management and export commands."""
+    pass
+
+
+# Error handling and validation
+def handle_cli_error(error, exit_code=1):
+    """Handle CLI errors with user-friendly messages."""
+    if isinstance(error, click.ClickException):
+        console.print(f"{Colors.RED}Error: {error.message}{Colors.RESET}")
+    else:
+        console.print(f"{Colors.RED}Unexpected error: {str(error)}{Colors.RESET}")
+
+    sys.exit(exit_code)
+
+
+# Main entry point
+# Set up help system
+setup_command_help()
+register_help_command(cli)
+
+
+def main():
+    """Main entry point for the CLI application."""
     try:
-        settings = Settings(config_path=config)
-        ctx.obj['settings'] = settings
-        ctx.obj['processor'] = EmailProcessor(settings)
-        ctx.obj['db'] = DatabaseManager(settings)
+        cli()
+    except KeyboardInterrupt:
+        console.print(f"\n{Colors.YELLOW}Operation cancelled by user.{Colors.RESET}")
+        sys.exit(130)
     except Exception as e:
-        click.echo(f"Error loading configuration: {e}", err=True)
-        sys.exit(1)
+        handle_cli_error(e)
 
 
-@main.command()
-@click.option('--limit', '-l', type=int, default=100,
-              help='Maximum number of emails to process')
-@click.option('--dry-run', is_flag=True,
-              help='Show what would be processed without making changes')
-@click.pass_context
-def process(ctx, limit, dry_run):
-    """Process emails and assign priorities."""
-    try:
-        processor = ctx.obj['processor']
-        db = ctx.obj['db']
-
-        click.echo(f"Processing up to {limit} emails...")
-
-        if dry_run:
-            click.echo("DRY RUN: No changes will be made")
-
-        # Get emails to process
-        emails = db.get_unprocessed_emails(limit=limit)
-
-        if not emails:
-            click.echo("No emails to process")
-            return
-
-        for email in emails:
-            try:
-                priority = processor.classify_email(email)
-                click.echo(f"Email {email.id}: {priority}")
-
-                if not dry_run:
-                    db.update_email_priority(email.id, priority)
-
-            except Exception as e:
-                click.echo(f"Error processing email {email.id}: {e}", err=True)
-                continue
-
-        if not dry_run:
-            click.echo(f"Successfully processed {len(emails)} emails")
-        else:
-            click.echo(f"Would process {len(emails)} emails")
-
-    except Exception as e:
-        click.echo(f"Error processing emails: {e}", err=True)
-        sys.exit(1)
-
-
-@main.command()
-@click.option('--email', '-e', required=True,
-              help='Email address to test classification')
-@click.option('--subject', '-s', required=True,
-              help='Email subject to test')
-@click.option('--body', '-b', required=True,
-              help='Email body to test')
-@click.pass_context
-def test(ctx, email, subject, body):
-    """Test email classification with sample data."""
-    try:
-        processor = ctx.obj['processor']
-
-        # Create test email object
-        from ..database.models import Email
-        test_email = Email(
-            id='test',
-            sender=email,
-            subject=subject,
-            body=body,
-            received_date=None
-        )
-
-        # Classify the email
-        priority = processor.classify_email(test_email)
-
-        click.echo(f"Test Email Classification:")
-        click.echo(f"From: {email}")
-        click.echo(f"Subject: {subject}")
-        click.echo(f"Body: {body[:100]}...")
-        click.echo(f"Priority: {priority}")
-
-    except Exception as e:
-        click.echo(f"Error testing classification: {e}", err=True)
-        sys.exit(1)
-
-
-@main.command()
-@click.pass_context
-def config(ctx):
-    """Show current configuration."""
-    try:
-        settings = ctx.obj['settings']
-
-        click.echo("Current Configuration:")
-        click.echo(f"Email Server: {settings.email.server}")
-        click.echo(f"Email Port: {settings.email.port}")
-        click.echo(f"Email User: {settings.email.username}")
-        click.echo(f"Database Path: {settings.database.path}")
-        click.echo(f"AI Model: {settings.ai.model}")
-        click.echo(f"Debug Mode: {settings.debug}")
-
-    except Exception as e:
-        click.echo(f"Error showing configuration: {e}", err=True)
-        sys.exit(1)
-
-
-@main.command()
-@click.pass_context
-def init(ctx):
-    """Initialize the application and database."""
-    try:
-        db = ctx.obj['db']
-
-        click.echo("Initializing Email Priority Manager...")
-
-        # Initialize database
-        db.initialize()
-
-        # Create default configuration
-        settings = ctx.obj['settings']
-        settings.save_default_config()
-
-        click.echo("Initialization complete!")
-        click.echo("You can now configure your email settings.")
-
-    except Exception as e:
-        click.echo(f"Error initializing: {e}", err=True)
-        sys.exit(1)
-
-
-@main.command()
-@click.pass_context
-def status(ctx):
-    """Show application status and statistics."""
-    try:
-        db = ctx.obj['db']
-
-        # Get statistics
-        stats = db.get_statistics()
-
-        click.echo("Email Priority Manager Status:")
-        click.echo(f"Total Emails: {stats.get('total_emails', 0)}")
-        click.echo(f"Processed Emails: {stats.get('processed_emails', 0)}")
-        click.echo(f"High Priority: {stats.get('high_priority', 0)}")
-        click.echo(f"Medium Priority: {stats.get('medium_priority', 0)}")
-        click.echo(f"Low Priority: {stats.get('low_priority', 0)}")
-
-    except Exception as e:
-        click.echo(f"Error getting status: {e}", err=True)
-        sys.exit(1)
-
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
