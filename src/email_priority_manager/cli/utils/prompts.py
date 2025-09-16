@@ -186,66 +186,6 @@ class SelectionPrompt:
                 print(f"\n{Colors.YELLOW}Operation cancelled by user.{Colors.RESET}")
                 sys.exit(130)
 
-    @staticmethod
-    def select_with_descriptions(
-        message: str,
-        options: List[Dict[str, str]],
-        key_field: str = "key",
-        desc_field: str = "description",
-        default: Optional[str] = None
-    ) -> str:
-        """
-        Select from options with descriptions.
-
-        Args:
-            message: Selection message
-            options: List of dictionaries with key and description
-            key_field: Field name for the key
-            desc_field: Field name for the description
-            default: Default key value
-
-        Returns:
-            Selected key
-        """
-        print(f"{Colors.BLUE}{message}{Colors.RESET}")
-        print()
-
-        for i, option in enumerate(options, 1):
-            key = option.get(key_field, "Unknown")
-            desc = option.get(desc_field, "No description")
-            default_marker = ""
-
-            if default == key:
-                default_marker = f" {Colors.GREEN}(default){Colors.RESET}"
-
-            print(f"  {i}. {Colors.CYAN}{key}{Colors.RESET}: {desc}{default_marker}")
-
-        print()
-
-        while True:
-            try:
-                prompt = f"Select option (1-{len(options)})"
-                if default is not None:
-                    prompt += f" [{default}]"
-                prompt += ": "
-
-                response = input(prompt).strip()
-
-                if not response and default is not None:
-                    return default
-
-                choice = int(response)
-                if 1 <= choice <= len(options):
-                    return options[choice - 1].get(key_field)
-                else:
-                    print(f"{Colors.RED}Please enter a number between 1 and {len(options)}{Colors.RESET}")
-
-            except ValueError:
-                print(f"{Colors.RED}Please enter a valid number{Colors.RESET}")
-            except KeyboardInterrupt:
-                print(f"\n{Colors.YELLOW}Operation cancelled by user.{Colors.RESET}")
-                sys.exit(130)
-
 
 class InputPrompt:
     """Interactive input prompts."""
