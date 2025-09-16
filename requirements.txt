@@ -1,0 +1,2 @@
+# Core runtime dependencies
+-r requirements/base.txt
