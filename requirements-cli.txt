@@ -1,0 +1,8 @@
+# CLI Framework Dependencies
+click>=8.0.0
+rich>=13.0.0
+colorama>=0.4.6
+
+# Optional dependencies for enhanced features
+prompt-toolkit>=3.0.0  # For interactive prompts
+pyyaml>=6.0  # For configuration files
